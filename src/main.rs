@@ -11,7 +11,6 @@ fn debug_info(game: &Game) {
             print!("{}", cell);
         }
     }
-
 }
 
 // Game section
@@ -50,36 +49,55 @@ fn new_game() -> Game {
 fn main() {
     let mut game: Game = new_game();
     debug_info(&game);
-    gui();
     loop {
-        advance_turn(&mut game);
+        advance_turn_2p(&mut game);
     }
 }
 
 use std::io::stdin;
 
-fn advance_turn(game: &mut Game) {
+fn advance_turn_2p(game: &mut Game) {
     // Advance turn counter
     game.turn_number += 1;
     // Advance player id, if 0, initialise as player 1. If 1, go to player 2. If 2, go to player 1.
-    // TODO: Find a better way to do this.
-    if game.player_id == 0 {
-        game.player_id = 1;
-    } else if game.player_id == 1 {
-        game.player_id = 2;
-    } else if game.player_id == 2 {
-        game.player_id = 1;
+    match game.player_id {
+        0 => game.player_id = 1,
+        1 => game.player_id = 2,
+        2 => game.player_id = 1,
+        _ => ()
     }
-    // Get input from player.
-    print!("Player {}, make your move.", game.player_id);
-    let mut input = &mut String::new();
-    // Read input into input buffer.
-    stdin().read_line(&mut input).unwrap();
-
-    // Send win signal if win condition is met.
-
+    let mut turn_complete = false;
+    while turn_complete == false {
+        // Get input from player.
+        print!("Player {}, make your move.", game.player_id);
+        let mut input = &mut String::new();
+        // Read input into input buffer. TODO: Sanitise input here.
+        stdin().read_line(&mut input).unwrap();
+        // Parse input into coordinates. TODO: Make this better.
+        // X coord.
+        let x_coordinate = letter_to_number(input.chars().nth(0).unwrap()).unwrap();
+        // Y coord.
+        let y_coordinate = input.chars().nth(1).unwrap().to_digit(10).unwrap() as u8;
+        // Place tile on board.
+        // Check tile is not occupied already, if it is, log it and restart the turn.
+        if game.board[y_coordinate as usize][x_coordinate as usize] == 0 {
+            game.board[y_coordinate as usize][x_coordinate as usize] = game.player_id;
+            turn_complete = true;
+        } else {
+            println!("That space is already occupied!");
+        }
+    }
+    debug_info(game);
+    // Send win signal if win condition is met. TODO: Check for winning patterns.
 }
 
+fn letter_to_number(letter: char) -> Option<u8> {
+    match letter {
+        'a'..='z' => Some(letter as u8 - 97),
+        'A'..='Z' => Some(letter as u8 - 65),
+        _ => None,
+    }
+}
 // Minmax algorithm subsection of the game section
 /*
 
@@ -87,12 +105,10 @@ fn advance_turn(game: &mut Game) {
 
 fn minmax(depth: usize) {}
 
-
 // UI section
-use gtk4 as gtk;
 use gtk::prelude::*;
 use gtk::{glib, Application, ApplicationWindow, Button};
-
+use gtk4 as gtk;
 
 fn gui() -> glib::ExitCode {
     let app = Application::builder().application_id("Gomoku").build();
@@ -115,4 +131,3 @@ fn gui() -> glib::ExitCode {
 
     app.run()
 }
-
