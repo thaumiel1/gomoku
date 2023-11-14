@@ -55,6 +55,7 @@ fn main() {
 }
 
 use std::io::stdin;
+use regex_lite::Regex;
 
 fn advance_turn_2p(game: &mut Game) {
     // Advance turn counter
@@ -66,22 +67,35 @@ fn advance_turn_2p(game: &mut Game) {
         2 => game.player_id = 1,
         _ => ()
     }
+
     let mut turn_complete = false;
-    while turn_complete == false {
-        // Get input from player.
-        print!("Player {}, make your move.", game.player_id);
-        let mut input = &mut String::new();
-        // Read input into input buffer. TODO: Sanitise input here.
-        stdin().read_line(&mut input).unwrap();
+    while !turn_complete {
+        // Get input from player. TODO: Review this and make it more ergonomic for user.
         // Parse input into coordinates. TODO: Make this better.
-        // X coord.
-        let x_coordinate = letter_to_number(input.chars().nth(0).unwrap()).unwrap();
-        // Y coord.
-        let y_coordinate = input.chars().nth(1).unwrap().to_digit(10).unwrap() as u8;
+        if game.player_id == 1 {
+            println!("Player 1's turn.");
+        } else {
+            println!("Player 2's turn.");
+        }
+        println!("Enter coordinates in the format 'a1' or 'a 1' to place a tile.");
+        let input_verify = Regex::new(r"^[a-zA-Z][0-9]{1,2}$").unwrap();
+
+        let mut input = take_user_input();
+        let input = input.trim().to_string();
+
+        // This splits the input into two halves of a tuple at the index of 1.
+        let (x_coordinate, y_coordinate) = input.split_at(1);
+        // TODO: Sanitise the inputs here with regex.
+        // This is some necessary processing to turn the x coordinate into a grid index number.
+        // Also turns y from a numeric character to an int number to be used to index the board.
+        let x_coordinate = letter_to_number(x_coordinate.to_string()).expect("Failed to unwrap x coordinate.");
+        let y_coordinate = y_coordinate.parse::<u8>().expect("Failed to unwrap y coordinate.")-1;
+
+        let coord = vec![x_coordinate, y_coordinate];
         // Place tile on board.
         // Check tile is not occupied already, if it is, log it and restart the turn.
-        if game.board[y_coordinate as usize][x_coordinate as usize] == 0 {
-            game.board[y_coordinate as usize][x_coordinate as usize] = game.player_id;
+        if game.board[coord[1] as usize][coord[0] as usize] == 0 {
+            game.board[coord[1] as usize][coord[0] as usize] = game.player_id;
             turn_complete = true;
         } else {
             println!("That space is already occupied!");
@@ -91,10 +105,16 @@ fn advance_turn_2p(game: &mut Game) {
     // Send win signal if win condition is met. TODO: Check for winning patterns.
 }
 
-fn letter_to_number(letter: char) -> Option<u8> {
+fn take_user_input() -> String {
+    let mut buffer = "".to_string();
+    stdin().read_line(&mut buffer).unwrap();
+    buffer
+}
+
+fn letter_to_number(letter: String) -> Option<u8> {
+    let letter = letter.chars().nth(0).unwrap();
     match letter {
         'a'..='z' => Some(letter as u8 - 97),
-        'A'..='Z' => Some(letter as u8 - 65),
         _ => None,
     }
 }
