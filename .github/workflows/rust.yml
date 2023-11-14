@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install gtk && cargo build --verbose
+      run: eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew install gtk4 && cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
       
