@@ -120,7 +120,7 @@ fn letter_to_number(letter: String) -> Option<u8> {
 }
 // Minmax algorithm subsection of the game section
 /*
-
+The minmax (also known as minimax) algorithm is an AI algorithm that evaluates future moves for advantages and makes decisions on what to do from that analysis.
 */
 
 fn minmax(depth: usize) {}
