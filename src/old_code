@@ -1,0 +1,28 @@
+// UI section
+use gtk::prelude::*;
+use gtk::{glib, Application, ApplicationWindow, Button};
+use gtk4 as gtk;
+
+fn gui() -> glib::ExitCode {
+    let app = Application::builder().application_id("Gomoku").build();
+    app.connect_activate(|app| {
+        let window = ApplicationWindow::builder()
+            .application(app)
+            .title("Gomoku")
+            .default_width(400)
+            .default_height(400)
+            .build();
+
+        let button = Button::with_label("Click me!");
+        button.connect_clicked(|_| {
+            eprintln!("Clicked!");
+        });
+        window.set_child(Some(&button));
+
+        window.present();
+    });
+
+    app.run()
+}
+
+ 
