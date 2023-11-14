@@ -77,7 +77,7 @@ fn advance_turn_2p(game: &mut Game) {
         } else {
             println!("Player 2's turn.");
         }
-        println!("Enter coordinates in the format 'a1' or 'a 1' to place a tile.");
+        println!("Enter coordinates in the format 'a1' to place a tile.");
         let input_verify = Regex::new(r"^[a-zA-Z][0-9]{1,2}$").unwrap();
 
         let mut input = take_user_input();
@@ -124,7 +124,7 @@ fn letter_to_number(letter: String) -> Option<u8> {
 */
 
 fn minmax(depth: usize) {}
-
+/*
 // UI section
 use gtk::prelude::*;
 use gtk::{glib, Application, ApplicationWindow, Button};
@@ -151,3 +151,5 @@ fn gui() -> glib::ExitCode {
 
     app.run()
 }
+
+ */
