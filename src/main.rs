@@ -51,7 +51,6 @@ fn new_game() -> Game {
 
 use std::fs;
 
-// TODO: Loading games.
 fn load_game_from_file(filename: String) -> (Game, usize) {
     let in_buf = fs::read(format!("./saves/{}/last_game_state.txt", filename))
         .expect("Error reading buffer loading game from file.");
@@ -60,7 +59,6 @@ fn load_game_from_file(filename: String) -> (Game, usize) {
     (game, 0)
 }
 
-// TODO: Save games to file.
 fn save_game_to_file(game: Game) -> usize {
     println!("What do you want to call your save? (make it something memorable).");
     let input = take_user_input();
