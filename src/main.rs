@@ -1,3 +1,4 @@
+#![feature(fs_try_exists)]
 // Main gomoku program.
 
 // Util section
@@ -31,7 +32,9 @@ The player_id part of the struct will act as a flag so that the simulation knows
 Follows the same naming convention as the u8 for the board does.
 */
 
-pub struct Game {
+use serde::{Deserialize, Serialize};
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct Game {
     board: Vec<Vec<u8>>,
     player_id: u8,
     turn_number: usize,
@@ -46,16 +49,88 @@ fn new_game() -> Game {
     }
 }
 
-fn main() {
-    let mut game: Game = new_game();
-    debug_info(&game);
-    loop {
-        advance_turn_2p(&mut game);
+use std::fs;
+
+// TODO: Loading games.
+fn load_game_from_file(filename: String) -> (Game, usize) {
+    let in_buf = fs::read(format!("./saves/{}/last_game_state.txt", filename))
+        .expect("Error reading buffer loading game from file.");
+    let game = bincode::deserialize(&*in_buf).unwrap();
+    print!("{:?}", game);
+    (game, 0)
+}
+
+// TODO: Save games to file.
+fn save_game_to_file(game: Game) -> usize {
+    println!("What do you want to call your save? (make it something memorable).");
+    let input = take_user_input();
+    fs::create_dir(format!("./saves/{}", input)).expect("Could not create directory.");
+    let mut file = fs::File::create(format!("./saves/{}/last_game_state.txt", input))
+        .expect("Error opening file to save game.");
+    let buf = bincode::serialize(&game).expect("Could not serialise game.");
+    file.write(&buf)
+        .expect("Could not write to file when saving game.");
+
+    // Exit code.
+    return 0;
+}
+
+fn environment_setup() {
+    // Set up saves environment.
+    // MARKED AS UNSTABLE CODE. TRY_EXISTS FUNC
+    if !fs::try_exists("./saves").unwrap() {
+        let _ = fs::create_dir("./saves");
     }
 }
 
-use std::io::stdin;
-use regex_lite::Regex;
+fn main() {
+    // setup functions.
+    environment_setup();
+    // TODO: Make this defensive.
+    let mut valid = false;
+    let mut load_old_game = false;
+    let mut game = new_game();
+    while !valid {
+        println!("Do you want to start a new game?");
+        let input = take_user_input();
+        let input = input.trim();
+        match input {
+            "y" => {
+                load_old_game = false;
+                valid = true
+            }
+            "n" => {
+                load_old_game = true;
+                valid = true
+            }
+            _ => {
+                println!("Try again with either y or n.");
+                valid = false
+            }
+        }
+    }
+    if load_old_game {
+        println!("What is the save file name?");
+        let input = take_user_input();
+        (game, _) = load_game_from_file(input);
+    }
+
+    debug_info(&game);
+    loop {
+        advance_turn_2p(&mut game);
+        // TODO: Add saving that is integrated into the system.
+        println!("Save game?");
+        let input = take_user_input();
+        match input.as_str() {
+            "y" => {
+                save_game_to_file(game.clone());
+            }
+            _ => {}
+        }
+    }
+}
+
+use std::io::{stdin, Write};
 
 fn advance_turn_2p(game: &mut Game) {
     // Advance turn counter
@@ -65,31 +140,32 @@ fn advance_turn_2p(game: &mut Game) {
         0 => game.player_id = 1,
         1 => game.player_id = 2,
         2 => game.player_id = 1,
-        _ => ()
+        _ => (),
     }
 
     let mut turn_complete = false;
     while !turn_complete {
-        // Get input from player. TODO: Review this and make it more ergonomic for user.
-        // Parse input into coordinates. TODO: Make this better.
         if game.player_id == 1 {
             println!("Player 1's turn.");
         } else {
             println!("Player 2's turn.");
         }
         println!("Enter coordinates in the format 'a1' to place a tile.");
-        let input_verify = Regex::new(r"^[a-zA-Z][0-9]{1,2}$").unwrap();
 
-        let mut input = take_user_input();
+        let input = take_user_input();
         let input = input.trim().to_string();
 
         // This splits the input into two halves of a tuple at the index of 1.
         let (x_coordinate, y_coordinate) = input.split_at(1);
-        // TODO: Sanitise the inputs here with regex.
+        // TODO: Sanitise the inputs here.
         // This is some necessary processing to turn the x coordinate into a grid index number.
         // Also turns y from a numeric character to an int number to be used to index the board.
-        let x_coordinate = letter_to_number(x_coordinate.to_string()).expect("Failed to unwrap x coordinate.");
-        let y_coordinate = y_coordinate.parse::<u8>().expect("Failed to unwrap y coordinate.")-1;
+        let x_coordinate =
+            letter_to_number(x_coordinate.to_string()).expect("Failed to unwrap x coordinate.");
+        let y_coordinate = y_coordinate
+            .parse::<u8>()
+            .expect("Failed to unwrap y coordinate.")
+            - 1;
 
         let coord = vec![x_coordinate, y_coordinate];
         // Place tile on board.
@@ -123,4 +199,7 @@ fn letter_to_number(letter: String) -> Option<u8> {
 The minmax (also known as minimax) algorithm is an AI algorithm that evaluates future moves for advantages and makes decisions on what to do from that analysis.
 */
 
+/*
 fn minmax(depth: usize) {}
+*/
+// UI section
