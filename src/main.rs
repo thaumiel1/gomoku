@@ -81,17 +81,13 @@ fn environment_setup() {
     }
 }
 
-fn main() {
-    // setup functions.
-    environment_setup();
-    // TODO: Make this defensive.
+fn question_new_game() -> bool {
     let mut valid = false;
     let mut load_old_game = false;
-    let mut game = new_game();
     while !valid {
         println!("Do you want to start a new game?");
         let input = take_user_input();
-        let input = input.trim();
+        let input = input.trim_end();
         match input {
             "y" => {
                 load_old_game = false;
@@ -102,11 +98,24 @@ fn main() {
                 valid = true
             }
             _ => {
-                println!("Try again with either y or n.");
+                println!("Try again with either y or n. (lowercase)");
                 valid = false
             }
         }
     }
+    return load_old_game;
+}
+
+fn setup_functions() {
+    // Any functions for setting up for processing.
+    environment_setup();
+}
+
+fn main() {
+    setup_functions();
+    // TODO: Make this defensive.
+    let mut game = new_game();
+    let load_old_game = question_new_game();
     if load_old_game {
         println!("What is the save file name?");
         let input = take_user_input();
